@@ -1,0 +1,29 @@
+''' Reading in and looking at a subset of the data to see which columns we want '''
+import pandas as pd
+subset = pd.read_csv('Copy of SubsetRows.csv',encoding='latin-1')
+#subset.head()
+
+
+
+
+''' Creating a list of the columns we want to keep in this dataset '''
+
+subset_columns = ['BUYER_CITY', 'BUYER_STATE', 'BUYER_COUNTY', 'QUANTITY', 'TRANSACTION_DATE','CALC_BASE_WT_IN_GM','MME_Conversion_Factor']
+
+'''Reading in the data through chunking and dropping variables.  '''
+
+
+
+tempChunk =[]
+tempData = []
+data = pd.DataFrame()
+chunksize = 10 ** 7
+drug_data = pd.DataFrame()
+for chunk in pd.read_csv('arcos_all_washpost.tsv', sep='\t', chunksize = chunksize, iterator =True , low_memory=False):
+    data = chunk.loc[:,subset_columns]
+    tempData.append(data)
+''' Buffering Chunks'''
+data = pd.concat(tempData)
+data.head()
+
+''' Calculating standardized drug quantities'''
