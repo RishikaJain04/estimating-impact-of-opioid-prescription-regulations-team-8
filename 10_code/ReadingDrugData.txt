@@ -27,3 +27,5 @@ data = pd.concat(tempData)
 data.head()
 
 ''' Calculating standardized drug quantities'''
+
+data['MME_Calculated']= data['MME_Conversion_Factor']*data['CALC_BASE_WT_IN_GM']*data['QUANTITY']
