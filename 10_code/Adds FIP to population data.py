@@ -8,7 +8,7 @@ Created on Sun Oct 27 14:02:52 2019
 import pandas as pd
 import os
 
-#project_directory = "C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/estimating-impact-of-opioid-prescription-regulations-team-8"
+project_directory = "C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/estimating-impact-of-opioid-prescription-regulations-team-8"
 course_directory = "C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/"
 #os.chdir(project_directory)
 os.chdir(course_directory)
@@ -51,17 +51,18 @@ def combine_state_and_county_into_FIP_code(state, county):
 
 #Load populations dataset
 pop = pd.read_csv("County Population Data.csv", encoding = "latin-1")
+pop['FIP'] = 0
 
 for i in range(len(pop)):
     
     state = pop['STATE'][i]    
     county = pop['COUNTY'][i]
-    pop['FIP'][i] = combine_state_and_county_into_FIP_code(state, county )
+    pop.loc[:,'FIP'][i] = combine_state_and_county_into_FIP_code(state, county )
     
 
-pop['FIP'].head()
+output_file_name = "population data with FIP"
+pop.to_csv(project_directory + "/20_intermediate_files/" + output_file_name  + ".csv")
 
-    
     
 
 
