@@ -3,7 +3,7 @@ The mortality data we have is currently in in seperate files. These files have y
 The data we have on causes of death does not contain any FIPs codes. These codes are vital to us merging the datasets together.
 Having data on deaths will allow us to better undesrtand the effect of the interventions on the drug crisis.
 
-Files are named  with the following convention: [Underlying Cause of Death, 2003.txt]. We can substitute each year in the file name to import different files
+Files are named  with the following convention: [Underlying Cause of Death, 2003.txt]. We can substitute each year in the file name to import different files.
 
 '''
 
@@ -16,7 +16,7 @@ import pandas as pd
 
 drug_data_full = pd.Dataframe()
 for i in range(13):
-    name = 'Underlying Cause of Death, 20' + str(i+3)+'.txt'
+    name = 'Underlying Cause of Death, ' + str(i+2003)+'.txt'
     temp_data = pd.read_csv(name, delimiter="\t")
     drug_data_full = drug_data_full.append(temp_data)
     
