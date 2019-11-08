@@ -28,10 +28,10 @@ def get_year(date):
 shipments['YEAR'] = list(map(get_year, shipments['TRANSACTION_DATE']))
 
 #Select columns we are interested in keeping
-shipments = shipments.loc[:,['BUYER_COUNTY', 'YEAR','QUANTITY']]
+shipments = shipments.loc[:,['BUYER_COUNTY','BUYER_STATE', 'YEAR','QUANTITY']]
 
 #Group by buyer-county per year
-shipments = shipments.groupby(['BUYER_COUNTY','YEAR'],axis = 0, as_index = False).sum()
+shipments = shipments.groupby(['BUYER_COUNTY','BUYER_STATE','YEAR'],axis = 0, as_index = False).sum()
 
 #Save shipments by county & year as parquet file
 shipments.to_parquet("shipments_by_county.gzip")
