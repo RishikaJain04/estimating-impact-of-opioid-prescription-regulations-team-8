@@ -16,7 +16,7 @@ import statsmodels.formula.api as smfa
 #Change working directory
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
 
-#Import data on shipments
+#Import data on shipments- Using ubset of data as an example. 
 shipments = pd.read_excel("Copy of SubsetRows.xlsx")
 
 #Define function to extract year from transaction date
