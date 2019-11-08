@@ -1,5 +1,0 @@
-'''
-Currently the data we have on causes of death does not contain any FIPs codes. These codes are vital to us merging the datasets together.
-Having data on deaths will allow us to better undesrtand the effect of the interventions on the drug crisis.
-
-'''
