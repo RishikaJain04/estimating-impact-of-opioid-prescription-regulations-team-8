@@ -11,12 +11,11 @@
 #Import packages
 import os
 import pandas as pd
-import statsmodels.formula.api as smfa
 
 #Change working directory
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
 
-#Import data on shipments- Using ubset of data as an example. 
+#Import data on shipments - Using a subset of the data
 shipments = pd.read_excel("Copy of SubsetRows.xlsx")
 
 #Define function to extract year from transaction date
@@ -33,4 +32,7 @@ shipments = shipments.loc[:,['BUYER_COUNTY', 'YEAR','QUANTITY']]
 
 #Group by buyer-county per year
 shipments = shipments.groupby(['BUYER_COUNTY','YEAR'],axis = 0, as_index = False).sum()
+
+#Save shipments by county & year as parquet file
+shipments.to_parquet("shipments_by_county.gzip")
 
