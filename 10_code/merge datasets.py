@@ -1,6 +1,11 @@
-### In this script, we merge two datasets:
+### In this script, we merge three datasets:
 ### (1) Shipments of drugs for each county
 ### (2) Population of each county
+### (3) Causes of death in each county
+### This script is divided in two parts.
+### In part 1, we merge the shipments and population datasets (1 and 2)
+### In part 2, we merge the dataset obtained in part 1 with the causes od death (3) dataset.
+
 
 import os
 import pandas as pd
@@ -39,4 +44,32 @@ data = pd.merge(shipments, population, on = 'FIPS', how = 'inner', indicator=Tru
 
 #Check if merge was succesful
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
+data = data.drop('_merge', axis = 1) #Column _merge is no longer useful and will be a nuissance on our next merge, so let's drop it
 
+
+##########
+# Part 2 #
+##########
+
+cod = pd.read_parquet("Causes_of_Death_ready_to_merge.gzip")
+
+#Make necessary adjustments in table to allow merging
+cod = cod.rename(columns = {'Year':'YEAR'}) #Change 'year' column in *cod* dataframe to match *data* dataframe
+data = data.astype({'YEAR':'int64'}) #Change *year* from string to int64
+cod = cod.astype({'YEAR':'int64'}) #Change *year* from float64 to int64
+
+assert np.dtype(cod.YEAR) == np.dtype(data.YEAR)
+
+
+
+#Merge
+data = pd.merge(data, cod, on = ['FIPS','YEAR'], how = 'inner', indicator=True)
+assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
+data = data.drop('_merge', axis = 1) #Column _merge is no longer useful so let's drop it
+
+
+#Rename columns in final dataset
+data = data.rename(columns={'BUYER_COUNTY': 'COUNTY', 'BUYER_STATE':'STATE'})
+
+#Save
+data.to_parquet("merged_data.gzip")
