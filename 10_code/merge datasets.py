@@ -67,9 +67,10 @@ data = pd.merge(data, cod, on = ['FIPS','YEAR'], how = 'inner', indicator=True)
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
 data = data.drop('_merge', axis = 1) #Column _merge is no longer useful so let's drop it
 
-
 #Rename columns in final dataset
 data = data.rename(columns={'BUYER_COUNTY': 'COUNTY', 'BUYER_STATE':'STATE'})
 
+
 #Save
+os.chdir("./estimating-impact-of-opioid-prescription-regulations-team-8/20_intermediate_files")
 data.to_parquet("merged_data.gzip")
