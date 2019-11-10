@@ -2,9 +2,10 @@
 ### (1) Shipments of drugs for each county
 ### (2) Population of each county
 ### (3) Causes of death in each county
-### This script is divided in two parts.
+### This script is divided in three parts.
 ### In part 1, we merge the shipments and population datasets (1 and 2)
 ### In part 2, we merge the dataset obtained in part 1 with the causes od death (3) dataset.
+### In part 3, we aggregate at the level of state-year and calculate the number of deaths per 100k inhabitants
 
 
 import os
@@ -13,34 +14,28 @@ import numpy as np
 
 #Open populations file
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/estimating-impact-of-opioid-prescription-regulations-team-8/20_intermediate_files")
-population = pd.read_csv("population data with FIP.csv", encoding='latin-1')
+population = pd.read_csv("population data with FIP in long format.csv", encoding='latin-1')
+
+population.head()
 
 #Select relevant columns
-population = population.loc[:,['FIP',
-                               'POPESTIMATE2010',
-                              'POPESTIMATE2011',
-                              'POPESTIMATE2012',
-                              'POPESTIMATE2013',
-                              'POPESTIMATE2014',
-                              'POPESTIMATE2015',
-                              'POPESTIMATE2016',
-                              'POPESTIMATE2017',
-                              'POPESTIMATE2018']]
+population = population.loc[:,['FIP','Year','population']]
 
 #Open shipments file
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
 shipments = pd.read_parquet("shipments_with_FIPS.gzip")
 
 #Rename population column to match shipment
-population.rename(columns = {'FIP':'FIPS'}, inplace = True)
+population.rename(columns = {'FIP':'FIPS', 'Year':'YEAR'}, inplace = True)
 
-#Adjust shipment FIPS to numpy int64 for matching
+#Adjust shipment FIPS and YEAR to numpy int64 for matching
 shipments.FIPS = np.int64(shipments.FIPS)
+shipments.YEAR = np.int64(shipments.YEAR)
 
 assert type(shipments.FIPS[0]) == type(population.FIPS[0])
 
 #Merge
-data = pd.merge(shipments, population, on = 'FIPS', how = 'inner', indicator=True, validate='m:1')
+data = pd.merge(shipments, population, on = ['FIPS','YEAR'], how = 'inner', indicator=True, validate='m:1')
 
 #Check if merge was succesful
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
@@ -70,7 +65,24 @@ data = data.drop('_merge', axis = 1) #Column _merge is no longer useful so let's
 #Rename columns in final dataset
 data = data.rename(columns={'BUYER_COUNTY': 'COUNTY', 'BUYER_STATE':'STATE'})
 
+##########
+# Part 3 #
+##########
+
+#Group by state-year
+data.sample(4)
+#Drop unnecessary columns for groupby
+data = data.drop(columns = ['COUNTY','FIPS'])
+
+#Convert numbers coded as strings into floats to allow for summation
+data = data.astype({'Deaths':'float','population':'float'})
+
+#Groupby
+data = data.groupby(['STATE','YEAR'], as_index = False).sum()
+
+
+#Create death per capita variable
+data['deaths_per_100k'] = 100000* data['Deaths'] / data['population']
 
 #Save
-os.chdir("./estimating-impact-of-opioid-prescription-regulations-team-8/20_intermediate_files")
 data.to_parquet("merged_data.gzip")
