@@ -5,7 +5,6 @@ import numpy as np
 #Open file
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
 cod = pd.read_csv("drug_data_full.csv") #Cause of death
-<<<<<<< HEAD
 
 #cod.sample(3)
 #cod['Drug/Alcohol Induced Cause'].value_counts()
@@ -27,23 +26,21 @@ prescription_overdose = [
 #Filter rows refering to the causes of death we are interested in
 cod = cod[cod['Drug/Alcohol Induced Cause'].isin(prescription_overdose)]
 
+
 #Remove unnecessary columns
-cod = cod.loc[:,['County Code','Year','Drug/Alcohol Induced Cause']].copy()
+cod = cod.loc[:,['County Code','Year','Deaths']].copy()
 
 #Transform County Code to numpy int64 type
 cod['County Code'] = np.int64(cod['County Code'])
+
+#Group by county and year, adding the total number of deaths.
+#This step is unnecessary if we're dealing with only one cause of death,
+#but we code it nonetheless, to prevent errors in merging should we wish to consider
+#more than a single cause of death.
+cod = cod.groupby(['County Code','Year'],as_index = False).sum()
 
 #Rename County Code to FIPS
 cod = cod.rename(columns = {'County Code':'FIPS'})
 
 #Save dataset
 cod.to_parquet("Causes_of_Death_ready_to_merge.gzip")
-=======
-data_drop = cod.drop((['Drug/Alcohol Induced Cause','Notes', 'Year Code','County']), axis=1)
-data_drop.rename(columns = {'County Code':'FIPS'}, inplace = True)
-dd = data_drop.dropna(how='all')
-mortality_data = dd[(dd['Drug/Alcohol Induced Cause Code'] != 'A9') &
-(dd['Drug/Alcohol Induced Cause Code'] != 'D9') &
-(dd['Drug/Alcohol Induced Cause Code'] != 'O9')]
-mortality_data
->>>>>>> 7fe1e7a933cdfb7568fa31a63596a7f955a42df5
