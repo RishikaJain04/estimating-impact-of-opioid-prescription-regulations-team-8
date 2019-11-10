@@ -1,0 +1,24 @@
+'''
+This code produces difference-in-difference plots for policy interventions in Florida, Texas, and Washington. 
+Each state is compared to the rest of the United States in each plot
+
+'''
+import pandas as pd
+import numpy as np
+from plotnine import *
+
+
+###Start by subsetting data by years. The analysis will be completed using all available data for that specific area. 
+###The following function subsets data by years. 
+
+def year_subset(df, start, end) : 
+
+    boolean_years = (df['YEAR'] > start) & (df['YEAR'] <= end)
+    filtered_data = df[boolean_years]
+    return(filtered_data)
+    
+    
+###This function should produce difference in difference plots
+
+df diff_in_diff(df, state, year, variable):
+
