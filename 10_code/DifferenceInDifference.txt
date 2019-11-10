@@ -35,7 +35,7 @@ def year_subset(df, start, end) :
     return(filtered_data)
     
     
-###This function should produce difference in difference plots
+###This function produces difference in differnce plots. You can specify the year of the policy and the variable you're interested in. 
 
 def diff_in_diff(data, state, year_change, response):
     data['InState'] = data['STATE']==state
