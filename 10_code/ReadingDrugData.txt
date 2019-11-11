@@ -14,16 +14,24 @@ subset_columns = ['BUYER_CITY', 'BUYER_STATE', 'BUYER_COUNTY', 'QUANTITY', 'TRAN
 
 
 
-tempChunk =[]
-tempData = []
-data = pd.DataFrame()
+shipments = pd.DataFrame()
 chunksize = 10 ** 7
 drug_data = pd.DataFrame()
 for chunk in pd.read_csv('arcos_all_washpost.tsv', sep='\t', chunksize = chunksize, iterator =True , low_memory=False):
-    data = chunk.loc[:,subset_columns]
-    tempData.append(data)
+    shipments = chunk.loc[:,subset_columns]
+    tempData.append(shipments)
 ''' Buffering Chunks'''
-data = pd.concat(tempData)
-data.head()
+shipments = pd.concat(tempData)
+
+shipments.to_parquet('shipments.gzip')
+
+'''Getting Years'''
+shipments['YEAR'] = shipments['TRANSACTION_DATE'][-4:]
 
 ''' Calculating standardized drug quantities'''
+### calculating mme and making other variables as float
+shipments['MME_Calculated'] = shipments.loc[:,'MME_Conversion_Factor'].astype(float)*hipments.loc[:,'CALC_BASE_WT_IN_GM'].astype(float)
+## droping variables not required on our further research
+shipments = shipments.drop(['QUANTITY', 'CALC_BASE_WT_IN_GM', 'DOSAGE_UNIT', 'MME_Conversion_Factor','dos_str'], axis = 1)
+## Dropping Alaska state due to the weird thingy going on 
+shipments = shipments[(shipments['STATE'] != 'AK')]
