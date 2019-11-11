@@ -12,8 +12,8 @@ subset_columns = ['BUYER_CITY', 'BUYER_STATE', 'BUYER_COUNTY', 'QUANTITY', 'TRAN
 
 '''Reading in the data through chunking and dropping variables.  '''
 
-
-
+tempChunk =[]
+tempData = []
 shipments = pd.DataFrame()
 chunksize = 10 ** 7
 drug_data = pd.DataFrame()
