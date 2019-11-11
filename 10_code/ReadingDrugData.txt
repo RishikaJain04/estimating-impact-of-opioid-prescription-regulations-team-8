@@ -12,6 +12,7 @@ subset_columns = ['BUYER_CITY', 'BUYER_STATE', 'BUYER_COUNTY', 'QUANTITY', 'TRAN
 
 '''Reading in the data through chunking and dropping variables.  '''
 
+
 tempChunk =[]
 tempData = []
 shipments = pd.DataFrame()
@@ -35,3 +36,4 @@ shipments['MME_Calculated'] = shipments.loc[:,'MME_Conversion_Factor'].astype(fl
 shipments = shipments.drop(['QUANTITY', 'CALC_BASE_WT_IN_GM', 'DOSAGE_UNIT', 'MME_Conversion_Factor','dos_str'], axis = 1)
 ## Dropping Alaska state due to the weird thingy going on 
 shipments = shipments[(shipments['STATE'] != 'AK')]
+
