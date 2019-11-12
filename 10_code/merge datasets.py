@@ -25,6 +25,16 @@ population = population.loc[:,['FIP','Year','population']]
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
 shipments = pd.read_parquet("shipments_with_FIPS.gzip")
 
+#Our problem specification tells us to drop Alaska, so we will.
+#Sorry, Alaska. I know I'm cold-blooded.
+is_Alaska = shipments[shipments.BUYER_STATE == "AK"].index
+shipments.drop(is_Alaska, axis = 0, inplace=True)
+
+#Some counties have missing FIPS:
+#shipments.loc[shipments.FIPS.isnull(),['BUYER_STATE','BUYER_COUNTY','FIPS']]
+#We should not drop them. But we will, for now.
+
+
 #Rename population column to match shipment
 population.rename(columns = {'FIP':'FIPS', 'Year':'YEAR'}, inplace = True)
 
