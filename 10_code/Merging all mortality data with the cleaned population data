@@ -10,7 +10,7 @@ for i in range(13):
 drug_data_full.to_csv("drug_data_full.csv")
 
 ## Cleaning the mortality data:
-data_drop = drug_data_full.drop((['Drug/Alcohol Induced Cause','Notes', 'Year Code','County']), axis=1)
+data_drop = drug_data_full.drop((['Drug/Alcohol Induced Cause','Notes', 'Year Code']), axis=1)
 data_drop.rename(columns = {'County Code':'FIPS'}, inplace = True)
 dd = data_drop.dropna(how='all')
 mortality_data1 = dd[(dd['Drug/Alcohol Induced Cause Code'] != 'A9') &
@@ -19,6 +19,11 @@ mortality_data1 = dd[(dd['Drug/Alcohol Induced Cause Code'] != 'A9') &
 
 mortality_data2 = mortality_data1.drop('Drug/Alcohol Induced Cause Code', axis='columns')
 mortality_data = mortality_data2[(mortality_data2['Deaths'] != 'Missing')]
+new = mortality_data['County'].str.split(", ", n = 1, expand = True) 
+
+mortality_data['State'] = new[1]
+mortality_data['County'] = new[0]
+mortality_data
 
 ### There are 25 missing deaths in the resultant data . Will ignore that later during merge###
 #########################################################
@@ -59,15 +64,7 @@ for c in pop.columns:
     print(c)
 
 ## Cleaning population data
-population = pop.loc[:,['FIPS','POPESTIMATE2010',
-'POPESTIMATE2011',
-'POPESTIMATE2012',
-'POPESTIMATE2013',
-'POPESTIMATE2014',
-'POPESTIMATE2015',
-'POPESTIMATE2016',
-'POPESTIMATE2017',
-'POPESTIMATE2018']]
+population = pop.loc[:,['FIPS','POPESTIMATE2010']]
 
 #########################################################
 ## Merging mortality data with population data
