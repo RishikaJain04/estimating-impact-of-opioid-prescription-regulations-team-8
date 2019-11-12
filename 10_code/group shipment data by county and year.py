@@ -13,10 +13,11 @@ import os
 import pandas as pd
 
 #Change working directory
-os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
+
+os.chdir("C:/Users/Joe Krinke/Desktop/")
 
 #Import data on shipments - Using a subset of the data
-shipments = pd.read_excel("Copy of SubsetRows.xlsx")
+shipments = pd.read_csv("shipments.csv")
 
 #Define function to extract year from transaction date
 def get_year(date):
