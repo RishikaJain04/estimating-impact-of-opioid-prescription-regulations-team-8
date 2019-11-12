@@ -54,6 +54,16 @@ shipments.drop(is_Alaska, axis = 0, inplace=True)
 #We should not drop them. But we will, for now.
 shipments = shipments.dropna(subset = ['FIPS'])
 
+#assert is_primary_key(shipments, ['FIPS','YEAR']) #Throws an error!
+#Our shipment data has multiple lines associated with the same FIPS.
+#An example is Baltimore and Baltimore City. Let's fix this.
+shipments.
+
+is_duplicated = shipments.loc[:,['FIPS','YEAR']].sort_values(['FIPS','YEAR']).duplicated(keep=False)
+shipments[is_duplicated].sort_values(['FIPS','YEAR']).head(2)
+
+
+
 #Rename population column to match shipment
 population.rename(columns = {'FIP':'FIPS', 'Year':'YEAR'}, inplace = True)
 
