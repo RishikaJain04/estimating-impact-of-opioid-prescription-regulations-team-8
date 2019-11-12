@@ -33,6 +33,7 @@ shipments.drop(is_Alaska, axis = 0, inplace=True)
 #Some counties have missing FIPS:
 #shipments.loc[shipments.FIPS.isnull(),['BUYER_STATE','BUYER_COUNTY','FIPS']]
 #We should not drop them. But we will, for now.
+shipments = shipments.dropna(subset = ['FIPS'])
 
 
 #Rename population column to match shipment
