@@ -37,13 +37,13 @@ def year_subset(df, start, end) :
 ###This function produces difference in differnce plots. You can specify the year of the policy and the variable you're interested in. 
 
 def diff_in_diff(data, state, year_change, response):
-    data['InState'] = data['STATE']==state
-    data_grouped= data.groupby(['YEAR'], as_index=False).mean()
-    data_grouped.head()
-    data_before = year_subset(data_grouped, 2006, year_change)
-    data_before = data_before.groupby('YEAR', as_index=False).mean()
-    data_after = year_subset(data_grouped, year_change, 2020)
-    data_after = data_after.groupby('YEAR', as_index=False).mean()
+
+    data_before = year_subset(data, 2006, year_change)
+    data_before['InState'] = data_before['STATE']==state
+    data_before = data_before.groupby(['YEAR', 'InState'], as_index=False).mean()
+    data_after = year_subset(data, year_change, 2020)
+    data_after['InState'] = data['STATE']==state
+    data_after = data_after.groupby(['YEAR', 'InState'], as_index=False).mean()
 
     before =(ggplot(data_before, aes(x='YEAR', y= response, group = 'InState')) + geom_line(alpha=.5) + geom_point()+ggtitle('Before Intervention'))
     after = (ggplot(data_after, aes(x='YEAR', y= response, group = 'InState')) + geom_line(alpha=.5) + geom_point()+ggtitle('After Intervention'))
