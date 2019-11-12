@@ -1,0 +1,32 @@
+import pandas as pd
+drug_data_full = pd.read_csv('drug_data_full.csv')
+drug_data_full = drug_data_full.dropna()
+drug_data_full['County Code'] = drug_data_full['County Code'].apply(lambda x: '{0:0>7}'.format(x))
+
+## Cleaning the mortality data:
+data_drop = drug_data_full.drop((['Drug/Alcohol Induced Cause','Notes', 'Year Code']), axis=1)
+data_drop.rename(columns = {'County Code':'FIPS'}, inplace = True)
+
+mortality_data1 = dd[(dd['Drug/Alcohol Induced Cause Code'] != 'A9') &
+(dd['Drug/Alcohol Induced Cause Code'] != 'D9') &
+(dd['Drug/Alcohol Induced Cause Code'] != 'O9')]
+
+mortality_data2 = mortality_data1.drop('Drug/Alcohol Induced Cause Code', axis='columns')
+mortality_data = mortality_data2[(mortality_data2['Deaths'] != 'Missing')]
+mortality_data['FIPS'] = mortality_data['FIPS'].astype(float)
+mortality_data
+
+#Load populations dataset
+pop = pd.read_csv("County Population Data.csv", encoding = "latin-1")
+pop['STATE'] = pop['STATE'].apply(lambda x: '{0:0>2}'.format(x))
+pop['COUNTY'] = pop['COUNTY'].apply(lambda x: '{0:0>3}'.format(x))
+pop['FIPS'] = pop[['STATE', 'COUNTY']].apply(lambda x: ''.join(x), axis=1)
+pop['FIPS'] = pop['FIPS'].astype(float)
+population = pop.loc[:,['FIPS','POPESTIMATE2010']]
+population.dtypes
+
+#########################################################
+#Merging mortality data with population data
+trying_merge = pd.merge(mortality_data, population, on =['FIPS'], validate='m:1', indicator=True, how='inner')
+trying_merge = trying_merge.drop('_merge', axis='columns')
+trying_merge
