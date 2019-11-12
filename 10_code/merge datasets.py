@@ -39,10 +39,35 @@ population = pd.read_csv("population data with FIP in long format.csv", encoding
 population = population.loc[:,['FIP','Year','population']]
 
 assert is_primary_key(population, ['FIP','Year'])
+assert 2010 in(population.Year)
+
+#Filter population for year 2010
+#We would not like to do this and, in the future, may consider alternatives to this approach.
+#However, our population dataset has years 2010-2018 and our shipment dataset has years 2006-2012.
+#So the overlap between the two is so small, that we believe we do best in simply considering the
+#population fixed as in 2010.
+#We may later improve our model by searching a dataset with county population in 2006-2012
+population = population.loc[population.Year == 2010]
+assert population.Year.drop_duplicates().values == 2010
+
+#Since we are only considering population in 2010, there is no point in keeping
+#track of the year as a variable.
+#Likewise, the year ceases to be part of the primary key.
+#This will entail significant differences in our code
+#relative to the version we had before.
+#Therefore, if -- or when -- we decide to search for a new dataset on population,
+#we should consider reversing to a previous comit of this code.
+#This being said, let's drop Year from the population dataset
+#and consider only FIPS as its primary key.
+population = population.drop('Year', axis = 1)
+assert is_primary_key(population, 'FIP')
 
 #Open shipments file
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
 shipments = pd.read_parquet("shipments_with_FIPS.gzip")
+assert shipments.YEAR.min() <= 2006
+assert shipments.YEAR.max() >= 2012
+assert 2010 in shipments.YEAR
 
 #Our problem specification tells us to drop Alaska, so we will.
 #Sorry, Alaska. I know I'm cold-blooded.
@@ -68,7 +93,7 @@ shipments = shipments.groupby(['FIPS','YEAR','BUYER_STATE'], as_index=False).sum
 assert is_primary_key(shipments, ['FIPS','YEAR'])
 
 #Rename population column to match shipment
-population.rename(columns = {'FIP':'FIPS', 'Year':'YEAR'}, inplace = True)
+population.rename(columns = {'FIP':'FIPS'}, inplace = True)
 
 #Adjust shipment FIPS and YEAR to numpy int64 for matching
 shipments.FIPS = np.int64(shipments.FIPS)
@@ -77,12 +102,13 @@ shipments.YEAR = np.int64(shipments.YEAR)
 assert type(shipments.FIPS[0]) == type(population.FIPS[0])
 
 #Merge
-data = pd.merge(shipments, population, on = ['FIPS','YEAR'], how = 'inner', indicator=True, validate='m:1')
+data = pd.merge(shipments, population, on = ['FIPS'], how = 'inner', indicator=True, validate='m:1')
 
 #Check if merge was succesful
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
 data = data.drop('_merge', axis = 1) #Column _merge is no longer useful and will be a nuissance on our next merge, so let's drop it
 assert is_primary_key(data,['FIPS','YEAR'])
+assert (data.YEAR.min() <= 2006) and (data.YEAR.max() >= 2012)
 
 ##########
 # Part 2 #
@@ -112,11 +138,11 @@ data = data.rename(columns={'BUYER_STATE':'STATE'})
 # Part 3 #
 ##########
 
-#Drop unnecessary columns for groupby
-data = data.drop(columns = ['FIPS'], axis = 1)
-
 #Convert numbers coded as strings into floats to allow for summation
 data = data.astype({'Deaths':'float','population':'float'})
+
+#Drop unnecessary columns for groupby
+data = data.drop(columns = ['FIPS'], axis = 1)
 
 #Groupby
 data = data.groupby(['STATE','YEAR'], as_index = False).sum()
@@ -125,5 +151,10 @@ assert is_primary_key(data,['STATE','YEAR'])
 #Create death per capita variable
 data['deaths_per_100k'] = 100000* data['Deaths'] / data['population']
 
+
 #Save
+os.chdir("./estimating-impact-of-opioid-prescription-regulations-team-8/20_intermediate_files")
 data.to_parquet("merged_data.gzip")
+
+data.loc[:,'STATE'].value_counts().sort_values().head(7)
+data.loc[:,'STATE'].value_counts().value_counts()
