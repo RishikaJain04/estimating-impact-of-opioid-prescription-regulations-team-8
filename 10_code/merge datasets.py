@@ -54,15 +54,18 @@ shipments.drop(is_Alaska, axis = 0, inplace=True)
 #We should not drop them. But we will, for now.
 shipments = shipments.dropna(subset = ['FIPS'])
 
+#We'll proffit from the opportunity to drop some columns we no longer need
+shipments = shipments.drop(['CALC_BASE_WT_IN_GM','MME_Conversion_Factor'], axis = 1)
+
+#We would like to have one row per FIPS per year. We do not:
 #assert is_primary_key(shipments, ['FIPS','YEAR']) #Throws an error!
 #Our shipment data has multiple lines associated with the same FIPS.
 #An example is Baltimore and Baltimore City. Let's fix this.
-shipments.
+shipments = shipments.drop('BUYER_COUNTY', axis = 1)
+shipments = shipments.groupby(['FIPS','YEAR','BUYER_STATE'], as_index=False).sum()
+#(we keep buyer state because we will later on want to group by this)
 
-is_duplicated = shipments.loc[:,['FIPS','YEAR']].sort_values(['FIPS','YEAR']).duplicated(keep=False)
-shipments[is_duplicated].sort_values(['FIPS','YEAR']).head(2)
-
-
+assert is_primary_key(shipments, ['FIPS','YEAR'])
 
 #Rename population column to match shipment
 population.rename(columns = {'FIP':'FIPS', 'Year':'YEAR'}, inplace = True)
@@ -79,7 +82,7 @@ data = pd.merge(shipments, population, on = ['FIPS','YEAR'], how = 'inner', indi
 #Check if merge was succesful
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
 data = data.drop('_merge', axis = 1) #Column _merge is no longer useful and will be a nuissance on our next merge, so let's drop it
-
+assert is_primary_key(data,['FIPS','YEAR'])
 
 ##########
 # Part 2 #
@@ -93,31 +96,31 @@ data = data.astype({'YEAR':'int64'}) #Change *year* from string to int64
 cod = cod.astype({'YEAR':'int64'}) #Change *year* from float64 to int64
 
 assert np.dtype(cod.YEAR) == np.dtype(data.YEAR)
-
+assert is_primary_key(cod, ['FIPS','YEAR'])
 
 #Merge
 data = pd.merge(data, cod, on = ['FIPS','YEAR'], how = 'inner', indicator=True)
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
 data = data.drop('_merge', axis = 1) #Column _merge is no longer useful so let's drop it
+assert is_primary_key(data,['FIPS','YEAR'])
+
 
 #Rename columns in final dataset
-data = data.rename(columns={'BUYER_COUNTY': 'COUNTY', 'BUYER_STATE':'STATE'})
+data = data.rename(columns={'BUYER_STATE':'STATE'})
 
 ##########
 # Part 3 #
 ##########
 
-#Group by state-year
-data.sample(4)
 #Drop unnecessary columns for groupby
-data = data.drop(columns = ['COUNTY','FIPS'])
+data = data.drop(columns = ['FIPS'], axis = 1)
 
 #Convert numbers coded as strings into floats to allow for summation
 data = data.astype({'Deaths':'float','population':'float'})
 
 #Groupby
 data = data.groupby(['STATE','YEAR'], as_index = False).sum()
-
+assert is_primary_key(data,['STATE','YEAR'])
 
 #Create death per capita variable
 data['deaths_per_100k'] = 100000* data['Deaths'] / data['population']
