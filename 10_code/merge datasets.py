@@ -12,14 +12,33 @@ import os
 import pandas as pd
 import numpy as np
 
+#This function will help us avoid mistakes
+def is_primary_key(data_frame, key):
+    '''This function returns TRUE if the columns listed in key
+    constitute a primary key to the given dataframe and false otherwise.
+    Hence, if we expect a dataframe to have one row per county-year,
+    then passing the dataframe with key = ['county','year'] should return
+    TRUE if everything is ok'''
+
+    number_of_rows = len(data_frame)
+
+    df = data_frame.loc[:,key]
+    df = df.drop_duplicates()
+    number_of_unique_rows = len(df)
+
+    return (number_of_rows == number_of_unique_rows)
+
+
+#Now lets start the merging process:
+
 #Open populations file
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/estimating-impact-of-opioid-prescription-regulations-team-8/20_intermediate_files")
 population = pd.read_csv("population data with FIP in long format.csv", encoding='latin-1')
 
-population.head()
-
 #Select relevant columns
 population = population.loc[:,['FIP','Year','population']]
+
+assert is_primary_key(population, ['FIP','Year'])
 
 #Open shipments file
 os.chdir("C:/Users/Felipe/Desktop/Duke MIDS/Practical Tools in Data Science/")
@@ -34,7 +53,6 @@ shipments.drop(is_Alaska, axis = 0, inplace=True)
 #shipments.loc[shipments.FIPS.isnull(),['BUYER_STATE','BUYER_COUNTY','FIPS']]
 #We should not drop them. But we will, for now.
 shipments = shipments.dropna(subset = ['FIPS'])
-
 
 #Rename population column to match shipment
 population.rename(columns = {'FIP':'FIPS', 'Year':'YEAR'}, inplace = True)
@@ -65,7 +83,6 @@ data = data.astype({'YEAR':'int64'}) #Change *year* from string to int64
 cod = cod.astype({'YEAR':'int64'}) #Change *year* from float64 to int64
 
 assert np.dtype(cod.YEAR) == np.dtype(data.YEAR)
-
 
 
 #Merge
