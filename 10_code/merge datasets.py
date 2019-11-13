@@ -151,10 +151,6 @@ assert is_primary_key(data,['STATE','YEAR'])
 #Create death per capita variable
 data['deaths_per_100k'] = 100000* data['Deaths'] / data['population']
 
-
 #Save
 os.chdir("./estimating-impact-of-opioid-prescription-regulations-team-8/20_intermediate_files")
-data.to_parquet("merged_data.gzip")
-
-data.loc[:,'STATE'].value_counts().sort_values().head(7)
-data.loc[:,'STATE'].value_counts().value_counts()
+data.to_parquet("merged_data_pop2010.gzip")
