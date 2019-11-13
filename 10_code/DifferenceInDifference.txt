@@ -13,17 +13,16 @@ import gzip
 df = pd.read_parquet('merged_data.gzip')
 df.head()
 
-##Processing data 
-df['Deaths'] = df['Deaths'].astype('float')
-df['POPESTIMATE2010'] = df['POPESTIMATE2010'].astype('float')
-df.drop(['COUNTY', 'FIPS'], axis = 1)
+##Processing data. No longer needed with waht we are using now. 
+#df['Deaths'] = df['Deaths'].astype('float')
+#df['POPESTIMATE2010'] = df['POPESTIMATE2010'].astype('float')
+#df.drop(['COUNTY', 'FIPS'], axis = 1)
 
-##Collapsing counties into states
-grouped = df.groupby(['STATE', 'YEAR'], as_index=False).sum()
-grouped.head()
 
-### Calculating per capita deaths.
-grouped['DeathsPerCapita'] = grouped['Deaths']/grouped['POPESTIMATE2010']
+### Calculating per capita Drugs
+
+df['DrugsPerCapita'] = df['MME_Calculated']/df['population']
+    
     
 ###Start by subsetting data by years. The analysis will be completed using all available data for that specific area. 
 ###The following function subsets data by years. 
@@ -38,15 +37,19 @@ def year_subset(df, start, end) :
 ###This function produces difference in differnce plots. You can specify the year of the policy and the variable you're interested in. 
 
 def diff_in_diff(data, state, year_change, response):
-    data['InState'] = data['STATE']==state
+
     data_before = year_subset(data, 2006, year_change)
-    data_after = year_subset(data, year_change, 2012)
-  
-    before = (ggplot(data_before, aes(x='YEAR', y= response, group = 'InState')) + geom_line(alpha=.5) + geom_point())
-    after = (ggplot(data_after, aes(x='YEAR', y= response, group = 'InState')) + geom_line(alpha=.5) + geom_point())
+    data_before['InState'] = data_before['STATE']==state
+    data_before = data_before.groupby(['YEAR', 'InState'], as_index=False).mean()
+    data_after = year_subset(data, year_change, 2020)
+    data_after['InState'] = data['STATE']==state
+    data_after = data_after.groupby(['YEAR', 'InState'], as_index=False).mean()
+
+    before =(ggplot(data_before, aes(x='YEAR', y= response, group = 'InState')) + geom_line(alpha=.5) + geom_point()+ggtitle('Before Intervention'))
+    after = (ggplot(data_after, aes(x='YEAR', y= response, group = 'InState')) + geom_line(alpha=.5) + geom_point()+ggtitle('After Intervention'))
     print(before)
     print(after)
    
     
-diff_in_diff(grouped, 'AZ', 2010, 'DeathsPerCapita')
+
     
