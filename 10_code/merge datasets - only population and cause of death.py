@@ -1,5 +1,5 @@
 ### In this script, we merge three datasets:
-### (1) Shipments of drugs for each county
+### (1) Shipments of drugs for each county -- we use this only to get the state of each county
 ### (2) Population of each county
 ### (3) Causes of death in each county
 ### This script is divided in three parts.
@@ -82,33 +82,30 @@ shipments = shipments.dropna(subset = ['FIPS'])
 #We'll proffit from the opportunity to drop some columns we no longer need
 shipments = shipments.drop(['CALC_BASE_WT_IN_GM','MME_Conversion_Factor'], axis = 1)
 
-#We would like to have one row per FIPS per year. We do not:
-#assert is_primary_key(shipments, ['FIPS','YEAR']) #Throws an error!
-#Our shipment data has multiple lines associated with the same FIPS.
-#An example is Baltimore and Baltimore City. Let's fix this.
-shipments = shipments.drop('BUYER_COUNTY', axis = 1)
-shipments = shipments.groupby(['FIPS','YEAR','BUYER_STATE'], as_index=False).sum()
-#(we keep buyer state because we will later on want to group by this)
+#For this analysis, we only use the shipments dataset because we need to know which state each FIPS belongs to.
+#Hence, we retain only FIPS and state from this dataset and name the dataset geography,
+#because it contains data on US geography.
+geography = shipments.loc[:,['FIPS','BUYER_STATE']]
+geography = geography.drop_duplicates()
 
-assert is_primary_key(shipments, ['FIPS','YEAR'])
+assert is_primary_key(geography, 'FIPS')
 
 #Rename population column to match shipment
 population.rename(columns = {'FIP':'FIPS'}, inplace = True)
 
-#Adjust shipment FIPS and YEAR to numpy int64 for matching
-shipments.FIPS = np.int64(shipments.FIPS)
-shipments.YEAR = np.int64(shipments.YEAR)
+#Adjust geography FIPS and YEAR to numpy int64 for matching
+geography.FIPS = np.int64(geography.FIPS)
 
-assert type(shipments.FIPS[0]) == type(population.FIPS[0])
+assert type(geography.FIPS[0]) == type(population.FIPS[0])
 
 #Merge
-data = pd.merge(shipments, population, on = ['FIPS'], how = 'inner', indicator=True, validate='m:1')
+data = pd.merge(geography, population, on = ['FIPS'], how = 'inner', indicator=True, validate='m:1')
 
 #Check if merge was succesful
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
 data = data.drop('_merge', axis = 1) #Column _merge is no longer useful and will be a nuissance on our next merge, so let's drop it
-assert is_primary_key(data,['FIPS','YEAR'])
-assert (data.YEAR.min() <= 2006) and (data.YEAR.max() >= 2012)
+assert is_primary_key(data,['FIPS'])
+
 
 ##########
 # Part 2 #
@@ -118,14 +115,12 @@ cod = pd.read_parquet("Causes_of_Death_ready_to_merge.gzip")
 
 #Make necessary adjustments in table to allow merging
 cod = cod.rename(columns = {'Year':'YEAR'}) #Change 'year' column in *cod* dataframe to match *data* dataframe
-data = data.astype({'YEAR':'int64'}) #Change *year* from string to int64
 cod = cod.astype({'YEAR':'int64'}) #Change *year* from float64 to int64
 
-assert np.dtype(cod.YEAR) == np.dtype(data.YEAR)
 assert is_primary_key(cod, ['FIPS','YEAR'])
 
 #Merge
-data = pd.merge(data, cod, on = ['FIPS','YEAR'], how = 'inner', indicator=True)
+data = pd.merge(data, cod, on = 'FIPS', how = 'inner', indicator=True)
 assert len(data.loc[data._merge != 'both']) == 0, "Some counties were only present in one dataset, not on both"
 data = data.drop('_merge', axis = 1) #Column _merge is no longer useful so let's drop it
 assert is_primary_key(data,['FIPS','YEAR'])
